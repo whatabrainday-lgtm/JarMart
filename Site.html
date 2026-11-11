@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="JarMart's links and projects.">
+        <title>JarMart | Links</title>
+
+        <style>
+            * {
+                box-sizing: border-box;
+            }
+
+            body {
+                margin: 0;
+                padding: 0;
+                background-color: rgb(0, 0, 60);
+                color: white;
+                font-size: 1rem;
+            }
+
+            .TB {
+                background-color: midnightblue;
+                width: 100%;
+                min-height: 4rem;
+                display: flex;
+                align-items: center;
+                justify-content: flex-start;
+                flex-direction: row;
+                color: white;
+                padding: 0.5rem 1rem;
+            }
+            
+            .TB img {
+                width: 4rem;
+                height: 4rem;
+                margin-right: 1rem;
+                flex: 0 0 auto;
+            }
+
+            .Desc {
+                margin: 1rem auto;
+                padding: 1rem;
+                background-color: midnightblue;
+                border-radius: 0.5rem;
+                width: min(50rem, calc(100% - 2rem));
+            }
+
+            .Links {
+                margin: 1rem auto;
+                padding: 1rem;
+                background-color: midnightblue;
+                border-radius: 0.5rem;
+                width: min(50rem, calc(100% - 2rem));
+            }
+
+            .Links .btn {
+                display: inline-flex;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 0.75rem;
+                min-height: 3rem;
+                max-width: 100%;
+                padding: 0.5rem 1rem;
+                border: 1px solid rgba(255, 255, 255, 0.18);
+                border-radius: 0.5rem;
+                background-color: rgba(255, 255, 255, 0.08);
+                color: white;
+                text-decoration: none;
+                transition: background-color 150ms ease, border-color 150ms ease;
+            }
+
+            .Links .btn:hover {
+                background-color: rgba(255, 255, 255, 0.16);
+                border-color: rgba(255, 255, 255, 0.4);
+            }
+
+            .Links .btn:focus-visible,
+            .support-btn:focus-visible {
+                outline: 2px solid white;
+                outline-offset: 3px;
+            }
+
+            .Links .btn img {
+                width: 2rem;
+                height: 2rem;
+                object-fit: contain;
+            }
+
+            @media (max-width: 30rem) {
+                .TB {
+                    padding: 0.5rem;
+                }
+
+                .TB img {
+                    width: 3rem;
+                    height: 3rem;
+                    margin-right: 0.5rem;
+                }
+
+                .TB h1 {
+                    font-size: 1.15rem;
+                }
+
+                .Links .btn {
+                    width: 100%;
+                }
+            }
+
+            .support-btn {
+                padding: 0.5rem 1rem;
+                border: 1px solid rgba(255, 255, 255, 0.4);
+                border-radius: 0.5rem;
+                background-color: rgba(255, 255, 255, 0.08);
+                color: white;
+                cursor: pointer;
+            }
+
+            .support-btn:disabled {
+                cursor: default;
+                opacity: 0.7;
+            }
+
+            #support-status {
+                display: block;
+                min-height: 1.5em;
+                margin-top: 0.5rem;
+            }
+            
+        </style>
+    </head>
+
+    <body>
+        <header class="TB">
+            <img src="https://alturl.com/aydre" alt="">
+            <h1>JarMart</h1>
+        </header>
+        <main>
+            <section class="Desc">
+                <p>Hello! I'm JarMart. I make bots and games (I won't be sharing the games for privacy reasons). It's okay to ask questions while learning to code, but relying on AI to do all the work won't help you learn.</p>
+            </section>
+            <nav class="Links" aria-label="JarMart links">
+                <a class="btn" href="https://alturl.com/wi5ni">
+                    <img src="https://alturl.com/gshyo" alt="">
+                    JanitorAI
+                </a>
+                <a class="btn" href="https://saucepan.ai/u/Jarmart">
+                    <img src="https://alturl.com/tmepa" alt="">
+                    SaucePan AI
+                </a>
+            </nav>
+            <section class="Desc" aria-label="Support JarMart">
+                <p>Thanks for stopping by. Click below to show your support.</p>
+                <p>Supporters: <span id="support-count" aria-live="polite">Loading...</span></p>
+                <button class="support-btn" id="support-button" type="button">Support</button>
+                <span id="support-status" role="status" aria-live="polite"></span>
+            </section>
+        </main>
+        <script>
+            const supportStorageKey = "jarmart-supported";
+            const supportCount = document.getElementById("support-count");
+            const supportButton = document.getElementById("support-button");
+            const supportStatus = document.getElementById("support-status");
+            let hasSupported = false;
+
+            try {
+                hasSupported = localStorage.getItem(supportStorageKey) === "true";
+            } catch (error) {
+                // The in-memory flag still prevents repeat clicks for this page session.
+            }
+
+            if (hasSupported) {
+                supportButton.disabled = true;
+                supportButton.textContent = "Supported";
+            }
+
+            async function loadSupportCount() {
+                try {
+                    const response = await fetch("/api/support");
+                    if (!response.ok) {
+                        throw new Error("Unable to load supporters.");
+                    }
+
+                    const data = await response.json();
+                    if (!Number.isSafeInteger(data.count) || data.count < 1) {
+                        throw new Error("The supporter count is invalid.");
+                    }
+
+                    supportCount.textContent = data.count.toLocaleString();
+                } catch (error) {
+                    supportCount.textContent = "Unavailable";
+                    supportStatus.textContent = "The supporter count could not be loaded.";
+                }
+            }
+
+            supportButton.addEventListener("click", async () => {
+                if (hasSupported) {
+                    return;
+                }
+
+                supportButton.disabled = true;
+                supportStatus.textContent = "Saving your support...";
+
+                try {
+                    const response = await fetch("/api/support", { method: "POST" });
+                    if (!response.ok) {
+                        throw new Error("Unable to save support.");
+                    }
+
+                    const data = await response.json();
+                    if (!Number.isSafeInteger(data.count) || data.count < 1) {
+                        throw new Error("The supporter count is invalid.");
+                    }
+
+                    hasSupported = true;
+                    try {
+                        localStorage.setItem(supportStorageKey, "true");
+                    } catch (error) {
+                        // Keep the successful support in memory when storage is unavailable.
+                    }
+
+                    supportCount.textContent = data.count.toLocaleString();
+                    supportButton.textContent = "Supported";
+                    supportStatus.textContent = "Thanks for your support!";
+                } catch (error) {
+                    supportButton.disabled = false;
+                    supportStatus.textContent = "Your support could not be saved. Please try again.";
+                }
+            });
+
+            loadSupportCount();
+        </script>
+    </body>
+</html>
